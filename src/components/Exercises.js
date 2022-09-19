@@ -3,9 +3,35 @@ import Pagination from '@mui/material/Pagination';
 import { Box, Stack, Typography } from '@mui/material';
 
 import { exerciseOptions, fetchData } from '../utils/fetchData';
+import ExerciseCard from './ExerciseCard';
 
 const Exercises = ({ exercises, bodyPart, setExercises}) => {
-  console.log(exercises);
+  const [currentPage, setCurrentPage] = useState(1);
+  const exercisesPage = 9
+  
+  useEffect(() => {
+   const fetchExercisesData = async () => {
+     let exerciseData = [];
+
+     if(bodyPart === "all"){
+       exerciseData = await fetchData('https://exercisedb.p.rapidapi.com/exercises', exerciseOptions);
+     } else {
+       exerciseData = await fetchData(`https://exercisedb.p.rapidapi.com/exercises/bodyPart/${bodyPart}`, exerciseOptions);
+     }
+     setExercises(exerciseData);
+   }
+   fetchExercisesData()
+  },[bodyPart])
+
+  const indexOfLastExercise = currentPage * exercisesPage;
+  const indexOfFirstExercise = indexOfLastExercise - exercisesPage;
+  const currentExercises = exercises.slice(indexOfFirstExercise, indexOfLastExercise );
+
+  const paginate = (e, v) => {
+    setCurrentPage(v);
+
+    window.scrollTo({top: 1800, behavior: "smooth"})
+  }
   return (
     <Box id="exercise"
       sx={{mt: {lg: '100px'}}}
@@ -17,11 +43,23 @@ const Exercises = ({ exercises, bodyPart, setExercises}) => {
       </Typography>
       <Stack direction="row" sx={{gap: {lg:'110px', xs: '50px'}}}
       flexWrap="wrap" justifyContent="center">
-        {exercises.map((exercise, index) => (
+        {currentExercises.map((exercise, index) => (
           <p>
-            {exercise.name}
+           < ExerciseCard key={index} exercise={exercise} />
           </p>
         ))}
+      </Stack>
+      <Stack mt="100px" alignItems="center">
+        {exercises.length > 9 && (
+          <Pagination 
+          count={Math.ceil(exercises.length / exercisesPage)} 
+          color="primary"
+          shape="rounded"
+          size="large"
+          page={currentPage}
+          onChange={paginate} /> 
+
+        )}
       </Stack>
       
     </Box>
